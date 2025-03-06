@@ -15,6 +15,7 @@ endif()
 message(STATUS "LLVM_CONFIG_EXECUTABLE: ${LLVM_CONFIG_EXECUTABLE}")
 # It is better to use cmake_path here if we are OK to raise CMake version up to 3.20.
 # cmake_path(GET LLVM_CONFIG_EXECUTABLE PARENT_PATH LLVM_TOOLS_BINARY_DIR)
+set(LLVM_CONFIG_EXECUTABLE /usr/lib/llvm-17/bin/llvm-config)
 get_filename_component(LLVM_TOOLS_BINARY_DIR "${LLVM_CONFIG_EXECUTABLE}" DIRECTORY)
 message(STATUS "LLVM_TOOLS_BINARY_DIR: ${LLVM_TOOLS_BINARY_DIR}")
 

@@ -449,7 +449,6 @@ Examples:
     ispc_home = Path(os.getenv("ISPC_HOME", str(ispc_root)))
     build_dir = ispc_home / f"build-{llvm_version}"
     llvm_dir = Path(llvm_home) / f"llvm-{llvm_version}"
-
     arch = platform.machine()
     os_name = platform.system()
     is_windows = os_name == 'Windows'
@@ -497,9 +496,12 @@ Examples:
             "-B", str(build_dir),
             str(ispc_root),
             f"-DCMAKE_BUILD_TYPE={build_type}",
-            "-DISPC_SLIM_BINARY=ON"
+            "-DISPC_SLIM_BINARY=ON",
+            "-DISPC_CROSS=ON"
         ]
         print("Configure build of ISPC")
+        print(configure_cmd)
+        print("-------------------------------------")
         run_command(configure_cmd,
                     lambda: (
                         print(f"CMake failed, cleaning up build directory {build_dir}"),
