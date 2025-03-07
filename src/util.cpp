@@ -61,16 +61,25 @@ void std::__libcpp_verbose_abort(char const *format, ...)
 }
 #endif // _LIBCPP_VERSION
 
+using namespace ispc;
+
 // Default implementation
 void defaultAbortFunction(void* handler) {
     abort();
 }
 
 // std::function to hold the current implementation
-std::function<void(void*)> currentAbortFunction = defaultAbortFunction;
+static std::function<void(void*)> currentAbortFunction = defaultAbortFunction;
 
-// Function to set a custom implementation
-void setCustomAbortFunction(std::function<void(void*)> customAbortFunction) {
+// The function that users will call
+void ISPCAbort(void* handler = nullptr) {
+    currentAbortFunction(handler);
+}
+
+/** Set a custom abort function that will be called when ISPCAbort is called.
+    If the customAbortFunction is nullptr, the default abort function will be used.
+*/
+void ispc::setCustomAbortFunction(std::function<void(void*)> customAbortFunction) {
     if (customAbortFunction) {
         currentAbortFunction = customAbortFunction;
     }
@@ -78,13 +87,6 @@ void setCustomAbortFunction(std::function<void(void*)> customAbortFunction) {
         currentAbortFunction = defaultAbortFunction;
     }
 }
-
-// The function that users will call
-void ISPCAbort(void* handler = nullptr) {
-    currentAbortFunction(handler);
-}
-
-using namespace ispc;
 
 /** Returns the width of the terminal where the compiler is running.
     Finding this out may fail in a variety of reasonable situations (piping
@@ -482,7 +484,7 @@ static void lPrintBugText() {
 [[noreturn]] void ispc::FatalError(const char *file, int line, const char *message) {
     fprintf(stderr, "%s(%d): FATAL ERROR: %s\n", file, line, message);
     lPrintBugText();
-    ISPCAbort()
+    ISPCAbort();
     abort();
 }
 
