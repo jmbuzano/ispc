@@ -436,7 +436,7 @@ hash_dir = false
     if (NOT CCACHE_EXE)
         # Download and unpack ccache executable when no ccache in system.
         FetchContent_Populate(ccache
-            QUIET
+            FETCH_CONTENT_QUIET
             URL ${CCACHE_URL}
             SOURCE_DIR ccache
             )
