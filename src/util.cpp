@@ -61,6 +61,29 @@ void std::__libcpp_verbose_abort(char const *format, ...)
 }
 #endif // _LIBCPP_VERSION
 
+// Default implementation
+void defaultAbortFunction(void* handler) {
+    abort();
+}
+
+// std::function to hold the current implementation
+std::function<void(void*)> currentAbortFunction = defaultAbortFunction;
+
+// Function to set a custom implementation
+void setCustomAbortFunction(std::function<void(void*)> customAbortFunction) {
+    if (customAbortFunction) {
+        currentAbortFunction = customAbortFunction;
+    }
+    else {
+        currentAbortFunction = defaultAbortFunction;
+    }
+}
+
+// The function that users will call
+void ISPCAbort(void* handler = nullptr) {
+    currentAbortFunction(handler);
+}
+
 using namespace ispc;
 
 /** Returns the width of the terminal where the compiler is running.
@@ -459,19 +482,20 @@ static void lPrintBugText() {
 [[noreturn]] void ispc::FatalError(const char *file, int line, const char *message) {
     fprintf(stderr, "%s(%d): FATAL ERROR: %s\n", file, line, message);
     lPrintBugText();
+    ISPCAbort()
     abort();
 }
 
 void ispc::DoAssert(const char *file, int line, const char *expr) {
     fprintf(stderr, "%s:%u: Assertion failed: \"%s\".\n", file, line, expr);
     lPrintBugText();
-    abort();
+    ISPCAbort();
 }
 
 void ispc::DoAssertPos(SourcePos pos, const char *file, int line, const char *expr) {
     Error(pos, "Assertion failed (%s:%u): \"%s\".", file, line, expr);
     lPrintBugText();
-    abort();
+    ISPCAbort();
 }
 
 ///////////////////////////////////////////////////////////////////////////

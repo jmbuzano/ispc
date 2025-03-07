@@ -189,4 +189,10 @@ int TerminalWidth();
 /** Returns true is the filepath represents stdin, otherwise false.
  */
 bool IsStdin(const char *);
+
+/** Sets a custom abort function. This function will be called when
+    ISPCAbort is called. If customAbortFunction is nullptr, the default
+    abort() function will be used.
+ */
+void setCustomAbortFunction(std::function<void(void*)> customAbortFunction);
 } // namespace ispc
