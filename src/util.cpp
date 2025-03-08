@@ -63,6 +63,56 @@ void std::__libcpp_verbose_abort(char const *format, ...)
 
 using namespace ispc;
 
+/**
+ * Default implementation of an abort function.
+ *
+ * This function is designed to handle abnormal program termination.
+ * It behaves differently based on whether the NDEBUG macro is defined,
+ * allowing for different behavior in development and production environments.
+ *
+ */
+void defaultAbortFunction(void* handler) {
+#ifdef NDEBUG
+    // If NDEBUG is defined, we are in a release build.
+    // Exit the program gracefully with a status code of 1.
+    // This is suitable for end-user environments where a core dump is not desired.
+    exit(1);
+#else
+    // If NDEBUG is not defined, we are in a debug build.
+    // Abort the program and generate a core dump for debugging purposes.
+    // This helps developers diagnose and fix issues by providing a snapshot of the program's state.
+    abort();
+#endif
+}
+
+// std::function to hold the current implementation of the abort function.
+// This allows for flexibility in changing the abort behavior at runtime.
+static std::function<void(void*)> currentAbortFunction = defaultAbortFunction;
+
+/**
+ * The function that users will call to handle abnormal program termination.
+ *
+ * This function delegates the call to the current abort function, which can be
+ * customized by changing the `currentAbortFunction` variable. By default, it uses
+ * `defaultAbortFunction`.
+ *
+ */
+void ISPCAbort(void* handler = nullptr) {
+    // Call the current abort function with the provided handler.
+    currentAbortFunction(handler);
+}
+/** Set a custom abort function that will be called when ISPCAbort is called.
+    If the customAbortFunction is nullptr, the default abort function will be used.
+*/
+void ispc::setCustomAbortFunction(std::function<void(void*)> customAbortFunction) {
+    if (customAbortFunction) {
+        currentAbortFunction = customAbortFunction;
+    }
+    else {
+        currentAbortFunction = defaultAbortFunction;
+    }
+}
+
 /** Returns the width of the terminal where the compiler is running.
     Finding this out may fail in a variety of reasonable situations (piping
     compiler output to 'less', redirecting output to a file, running the
@@ -459,19 +509,19 @@ static void lPrintBugText() {
 [[noreturn]] void ispc::FatalError(const char *file, int line, const char *message) {
     fprintf(stderr, "%s(%d): FATAL ERROR: %s\n", file, line, message);
     lPrintBugText();
-    abort();
+    ISPCAbort();
 }
 
 void ispc::DoAssert(const char *file, int line, const char *expr) {
     fprintf(stderr, "%s:%u: Assertion failed: \"%s\".\n", file, line, expr);
     lPrintBugText();
-    abort();
+    ISPCAbort();
 }
 
 void ispc::DoAssertPos(SourcePos pos, const char *file, int line, const char *expr) {
     Error(pos, "Assertion failed (%s:%u): \"%s\".", file, line, expr);
     lPrintBugText();
-    abort();
+    ISPCAbort();
 }
 
 ///////////////////////////////////////////////////////////////////////////
